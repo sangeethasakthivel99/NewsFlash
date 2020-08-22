@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">News Flash</string>
     <string name="unknown_value">Unknown</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="transition_name_splash_logo">splash_logo</string>
 </resources>
