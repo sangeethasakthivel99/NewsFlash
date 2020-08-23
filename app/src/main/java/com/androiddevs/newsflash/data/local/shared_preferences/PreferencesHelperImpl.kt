@@ -14,10 +14,6 @@ class PreferencesHelperImpl @Inject constructor(private val sharedPreferences: S
         sharedPreferences.edit().putBoolean(LOGGEDIN, true).apply()
     }
 
-    override fun logout() {
-        sharedPreferences.edit().clear().apply()
-    }
-
     override fun getLoggedIn(): Boolean {
         return sharedPreferences.getBoolean(LOGGEDIN, false)
     }
