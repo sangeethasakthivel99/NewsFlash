@@ -7,7 +7,9 @@ import com.androiddevs.newsflash.utils.TestDispatcher
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 
+@ExperimentalCoroutinesApi
 @Module(includes = [FakeAppBinders.FakeAppModule::class])
 abstract class FakeAppBinders {
 
