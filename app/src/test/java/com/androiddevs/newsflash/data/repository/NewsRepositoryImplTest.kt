@@ -24,7 +24,6 @@ class NewsRepositoryImplTest {
 
     @Before
     fun setUp() {
-        MockitoAnnotations.initMocks(this)
         DaggerFakeAppComponent.create().apply {
             inject(this@NewsRepositoryImplTest)
         }

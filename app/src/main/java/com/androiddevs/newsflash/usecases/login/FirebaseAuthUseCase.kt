@@ -1,4 +1,4 @@
-package com.androiddevs.newsflash.usecases
+package com.androiddevs.newsflash.usecases.login
 
 import android.content.Context
 import android.util.Log

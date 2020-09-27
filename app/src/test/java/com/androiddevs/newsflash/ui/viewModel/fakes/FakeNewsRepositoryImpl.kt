@@ -22,7 +22,7 @@ class FakeNewsRepositoryImpl @Inject constructor() : NewsRepository, TestableAPI
     }
 
 
-    fun getSuccessResponse(): Resource<List<NewsArticle>> {
+    private fun getSuccessResponse(): Resource<List<NewsArticle>> {
         return Resource.success(listOf())
     }
 

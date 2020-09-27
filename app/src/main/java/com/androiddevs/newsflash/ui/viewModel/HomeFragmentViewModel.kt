@@ -9,6 +9,7 @@ import com.androiddevs.newsflash.data.repository.models.NewsArticle
 import com.androiddevs.newsflash.utils.DispatcherProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 @ExperimentalCoroutinesApi
@@ -23,21 +24,34 @@ class HomeFragmentViewModel constructor(
     val events: MutableStateFlow<HomeScreenEvents?> = MutableStateFlow(null)
 
     init {
-
+        observeEvents()
     }
 
-    fun getTopHeadlines(headlinesRequest: TopHeadlinesRequest) {
+    private fun observeEvents() {
+        viewModelScope.launch {
+            events.collect { event ->
+                when (event) {
+                    is HomeScreenEvents.GetHeadLines -> {
+                        getTopHeadlines(event.topHeadlinesRequest)
+                    }
+                }
+            }
+        }
+    }
+
+    suspend fun getTopHeadlines(headlinesRequest: TopHeadlinesRequest) {
         viewModelScope.launch(appDispatchers.ioDispatcher) {
             val response = newsRepository.getBusinessNews(headlinesRequest)
-            if (response.status == Status.SUCCESS) {
+            val state = if (response.status == Status.SUCCESS) {
                 response.data?.let {
-                    screenStates.value = HomeScreenStates.TopHeadlinesReceived(it)
+                    HomeScreenStates.TopHeadlinesReceived(it)
                 } ?: kotlin.run {
-                    screenStates.value = HomeScreenStates.ErrorState
+                    HomeScreenStates.ErrorState
                 }
             } else {
-                screenStates.value = HomeScreenStates.ErrorState
+                HomeScreenStates.ErrorState
             }
+            screenStates.value = state
         }
     }
 
@@ -51,5 +65,5 @@ sealed class HomeScreenStates {
 
 
 sealed class HomeScreenEvents {
-
+    data class GetHeadLines(val topHeadlinesRequest: TopHeadlinesRequest) : HomeScreenEvents()
 }

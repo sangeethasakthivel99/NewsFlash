@@ -13,8 +13,4 @@ import javax.inject.Singleton
 interface FakeAppComponent {
     fun inject(homeFragmentViewModelTest: HomeFragmentViewModelTest)
     fun inject(homeFragmentViewModelTest: NewsRepositoryImplTest)
-
-    companion object {
-
-    }
 }
