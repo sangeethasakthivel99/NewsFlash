@@ -5,12 +5,12 @@ import com.androiddevs.newsflash.data.repository.models.NewsArticle
 
 fun News.Article.toNewsArticle(): NewsArticle {
     return NewsArticle(
-        source?.name ?: "",
-        author,
-        title,
-        description,
-        url,
-        urlToImage,
-        publishedAt ?: ""
+        sourceName = source?.name ?: "",
+        authorName = author,
+        articleTitle = title,
+        description = description,
+        articleUrl = url,
+        imageUrl = urlToImage,
+        publishedDate = publishedAt ?: ""
     )
 }

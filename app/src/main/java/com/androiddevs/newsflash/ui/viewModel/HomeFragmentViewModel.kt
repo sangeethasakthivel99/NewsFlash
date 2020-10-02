@@ -10,6 +10,8 @@ import com.androiddevs.newsflash.utils.DispatcherProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 @ExperimentalCoroutinesApi
@@ -40,19 +42,19 @@ class HomeFragmentViewModel constructor(
     }
 
     suspend fun getTopHeadlines(headlinesRequest: TopHeadlinesRequest) {
-        viewModelScope.launch(appDispatchers.ioDispatcher) {
-            val response = newsRepository.getBusinessNews(headlinesRequest)
-            val state = if (response.status == Status.SUCCESS) {
-                response.data?.let {
-                    HomeScreenStates.TopHeadlinesReceived(it)
-                } ?: kotlin.run {
+        newsRepository.getBusinessNews(true, headlinesRequest)
+            .onEach { response ->
+                val state = if (response.status == Status.SUCCESS) {
+                    response.data?.let {
+                        HomeScreenStates.TopHeadlinesReceived(it)
+                    } ?: kotlin.run {
+                        HomeScreenStates.ErrorState
+                    }
+                } else {
                     HomeScreenStates.ErrorState
                 }
-            } else {
-                HomeScreenStates.ErrorState
-            }
-            screenStates.value = state
-        }
+                screenStates.value = state
+            }.flowOn(viewModelScope.coroutineContext)
     }
 
 }
