@@ -9,5 +9,5 @@ interface NewsRepository {
     suspend fun getBusinessNews(
         enableCaching: Boolean,
         topHeadlinesRequest: TopHeadlinesRequest
-    ): Flow<Resource<List<NewsArticle>>>
+    ): Flow<List<NewsArticle>>
 }

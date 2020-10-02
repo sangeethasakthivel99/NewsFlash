@@ -1,16 +1,17 @@
 package com.androiddevs.newsflash.data.repository
 
 import com.androiddevs.newsflash.data.local.db.dao.NewsDao
+import com.androiddevs.newsflash.data.network.NetworkBoundResource
 import com.androiddevs.newsflash.data.network.apiwrapper.Resource
 import com.androiddevs.newsflash.data.network.apiwrapper.Status
 import com.androiddevs.newsflash.data.network.contract.NewsAPILayer
+import com.androiddevs.newsflash.data.network.models.News
+import com.androiddevs.newsflash.data.network.models.RequestData
 import com.androiddevs.newsflash.data.network.models.TopHeadlinesRequest
 import com.androiddevs.newsflash.data.repository.contract.NewsRepository
 import com.androiddevs.newsflash.data.repository.mapper.toNewsArticle
 import com.androiddevs.newsflash.data.repository.models.NewsArticle
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class NewsRepositoryImpl @Inject constructor(
@@ -21,34 +22,24 @@ class NewsRepositoryImpl @Inject constructor(
     override suspend fun getBusinessNews(
         enableCaching: Boolean,
         topHeadlinesRequest: TopHeadlinesRequest
-    ): Flow<Resource<List<NewsArticle>>> {
-        return if (enableCaching) {
-            getHeadlines(enableCaching, topHeadlinesRequest)
-            newsDao.getAll().map { Resource.success(it) }
-        } else {
-            flow { getHeadlines(enableCaching, topHeadlinesRequest) }
-        }
-    }
+    ): Flow<List<NewsArticle>> {
+        return object : NetworkBoundResource<News, List<NewsArticle>>(
+            observableCacheCall = { newsDao.getAll() }) {
 
-    private suspend fun getHeadlines(
-        enableCaching: Boolean,
-        topHeadlinesRequest: TopHeadlinesRequest
-    ): Resource<List<NewsArticle>> {
-        val response = apiLayer.getBusinessNews(topHeadlinesRequest)
-        if (response.status == Status.SUCCESS) {
-            response.data?.let {
-                val articles = it.articles.map { it.toNewsArticle() }
+            override val apiCall: suspend () -> Resource<News> =
+                { apiLayer.getBusinessNews(topHeadlinesRequest) }
 
-                if (enableCaching)
-                    newsDao.insertAll(articles)
-
-                return (Resource.success(articles))
-            } ?: run {
-                return (Resource.getDefaultError())
+            override val apiDataMap: News.() -> List<NewsArticle> = {
+                articles.map {
+                    it.toNewsArticle()
+                }
             }
-        } else {
-            return (Resource.error(response.message, response.errorException))
-        }
+
+            override val saveToDb: (suspend (List<NewsArticle>) -> Unit)? = { data ->
+                newsDao.insertAll(data)
+            }
+
+        }.get(RequestData(pageNumber = 1))
     }
 
 }
