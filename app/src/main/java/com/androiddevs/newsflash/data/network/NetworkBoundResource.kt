@@ -1,44 +1,40 @@
 package com.androiddevs.newsflash.data.network
 
 import com.androiddevs.newsflash.data.network.apiwrapper.Resource
-import com.androiddevs.newsflash.data.network.apiwrapper.Status
-import com.androiddevs.newsflash.data.network.models.RequestData
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 
 abstract class NetworkBoundResource<ApiType, ReturnType>(
-    val cacheCall: (suspend () -> ReturnType)? = null,
-    val observableCacheCall: (suspend () -> Flow<ReturnType>)? = null
+    private val cacheCall: (suspend () -> Flow<ReturnType?>),
+    private val apiCall: (suspend () -> Resource<ApiType>)
 ) {
 
-    abstract val apiCall: (suspend () -> Resource<ApiType>)
-
-    fun get(requestData: RequestData) = flow<ReturnType> {
-
+    suspend fun get(shouldCache: Boolean) = combine(
+        makeApiCall(shouldCache),
+        cacheCall()
+    ) { api, cached ->
+        if (shouldCache) {
+            cached ?: api
+        } else
+            api
     }
 
-    suspend fun makeApiCall(requestData: RequestData): Flow<Resource<ReturnType>> = flow<Resource<ReturnType>> {
+
+    private suspend fun makeApiCall(shouldCache: Boolean) = flow {
         val response = apiCall()
-        if (response.status == Status.SUCCESS) {
-            response.data?.let {
-                val domainData = it.apiDataMap()
-
-                if (requestData.shouldCache)
-                    saveToDb?.invoke(domainData)
-
-                emit (Resource.success(domainData))
-            } ?: run {
-                emit (Resource.getDefaultError())
-            }
-        } else {
-            emit (Resource.error(response.message, response.errorException))
-        }
+        val domainData = response.handleAPIResponse()
+        val paginatedData = paginate(domainData)
+        if (domainData != null && shouldCache) //1st run directly insert
+            saveToDb?.invoke(paginatedData)
+        emit(paginatedData)
     }
 
     open val saveToDb: (suspend (ReturnType) -> Unit)? = null
 
-    abstract val apiDataMap: (ApiType.() -> ReturnType)
+    open val paginate: (suspend (ReturnType) -> ReturnType) = { domainData -> domainData }
 
+    abstract val handleAPIResponse: (Resource<ApiType>.() -> ReturnType)
 
 
 }

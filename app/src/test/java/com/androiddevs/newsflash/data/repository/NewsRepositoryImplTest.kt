@@ -9,7 +9,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runBlockingTest
 import org.junit.Before
 import org.junit.Test
-import org.mockito.MockitoAnnotations
 import javax.inject.Inject
 
 @ExperimentalCoroutinesApi
@@ -33,7 +32,7 @@ class NewsRepositoryImplTest {
     fun `when the api is unsuccessful, repository should return proper error message`() =
         runBlockingTest {
             fakeAPILayerFake.apiStatus = Status.ERROR
-            val response = repository.getBusinessNews(headlinesRequest)
+            val response = repository.getNewsArticles(headlinesRequest)
             assert(response.message!!.isNotEmpty())
         }
 
@@ -41,7 +40,7 @@ class NewsRepositoryImplTest {
     fun `when a successful request is made, repository should return list of News Articles`() =
         runBlockingTest {
             fakeAPILayerFake.apiStatus = Status.SUCCESS
-            val response = repository.getBusinessNews(headlinesRequest)
+            val response = repository.getNewsArticles(headlinesRequest)
             assert(response.data is List<NewsArticle>)
         }
 }

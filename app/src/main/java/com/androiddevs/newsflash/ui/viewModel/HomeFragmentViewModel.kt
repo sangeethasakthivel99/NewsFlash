@@ -3,27 +3,28 @@ package com.androiddevs.newsflash.ui.viewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.androiddevs.newsflash.data.network.apiwrapper.Status
+import com.androiddevs.newsflash.data.network.models.RequestData
 import com.androiddevs.newsflash.data.network.models.TopHeadlinesRequest
 import com.androiddevs.newsflash.data.repository.contract.NewsRepository
 import com.androiddevs.newsflash.data.repository.models.NewsArticle
-import com.androiddevs.newsflash.utils.DispatcherProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 @ExperimentalCoroutinesApi
 class HomeFragmentViewModel constructor(
-    private val newsRepository: NewsRepository,
-    private val appDispatchers: DispatcherProvider
+    private val newsRepository: NewsRepository
 ) : ViewModel() {
 
     val screenStates: MutableStateFlow<HomeScreenStates> =
         MutableStateFlow(HomeScreenStates.Loading)
 
     val events: MutableStateFlow<HomeScreenEvents?> = MutableStateFlow(null)
+
+    private var pageNumber = 1
 
     init {
         observeEvents()
@@ -42,19 +43,20 @@ class HomeFragmentViewModel constructor(
     }
 
     suspend fun getTopHeadlines(headlinesRequest: TopHeadlinesRequest) {
-        newsRepository.getBusinessNews(true, headlinesRequest)
-            .onEach { response ->
-                val state = if (response.status == Status.SUCCESS) {
-                    response.data?.let {
-                        HomeScreenStates.TopHeadlinesReceived(it)
-                    } ?: kotlin.run {
+        newsRepository.getNewsArticles(RequestData(true, pageNumber), headlinesRequest)
+            .onEach { resource ->
+                val state = if (resource.status == Status.LOADING) {
+                    HomeScreenStates.Loading
+                } else {
+                    val articlesList = resource.data ?: listOf()
+                    if (!articlesList.isNullOrEmpty()) {
+                        HomeScreenStates.TopHeadlinesReceived(articlesList)
+                    } else {
                         HomeScreenStates.ErrorState
                     }
-                } else {
-                    HomeScreenStates.ErrorState
                 }
                 screenStates.value = state
-            }.flowOn(viewModelScope.coroutineContext)
+            }.launchIn(viewModelScope)
     }
 
 }

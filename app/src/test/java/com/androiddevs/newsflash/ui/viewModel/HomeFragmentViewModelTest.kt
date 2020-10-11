@@ -28,7 +28,7 @@ class HomeFragmentViewModelTest {
     lateinit var testDispatcher: DispatcherProvider
 
     private val homeFragmentViewModel: HomeFragmentViewModel by lazy {
-        HomeFragmentViewModel(fakeRepo, testDispatcher)
+        HomeFragmentViewModel(fakeRepo)
     }
 
     private val headlinesRequest = TopHeadlinesRequest("in")

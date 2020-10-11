@@ -25,6 +25,10 @@ data class Resource<T>(
             return Resource(Status.SUCCESS, data)
         }
 
+        fun <T> loading(): Resource<T> {
+            return Resource(Status.LOADING)
+        }
+
         fun <T> error(errorMessage: String? = null, exception: Exception? = null): Resource<T> {
             return Resource(Status.ERROR, message = errorMessage, errorException = exception)
         }
@@ -36,5 +40,5 @@ data class Resource<T>(
 }
 
 enum class Status {
-    SUCCESS, ERROR
+    SUCCESS, ERROR, LOADING
 }

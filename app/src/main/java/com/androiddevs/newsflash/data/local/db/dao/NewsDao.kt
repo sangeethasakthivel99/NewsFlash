@@ -15,5 +15,17 @@ interface NewsDao {
 
 
     @Query("Select * FROM news_details")
-    fun getAll(): Flow<List<NewsArticle>>
+    fun getAllFlow(): Flow<List<NewsArticle>>
+
+    suspend fun getAllArticles(): List<NewsArticle> {
+        val allRecords = getAll()
+        return if (!allRecords.isNullOrEmpty()) {
+            allRecords
+        } else {
+            listOf()
+        }
+    }
+
+    @Query("Select * FROM news_details")
+    suspend fun getAll(): List<NewsArticle>
 }
