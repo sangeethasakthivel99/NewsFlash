@@ -14,7 +14,6 @@ import com.androiddevs.newsflash.data.repository.models.NewsArticle
 import com.androiddevs.newsflash.utils.DispatcherProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class NewsRepositoryImpl @Inject constructor(
@@ -29,7 +28,7 @@ class NewsRepositoryImpl @Inject constructor(
     ): Flow<Resource<List<NewsArticle>>> {
         return object : NetworkBoundResource<News, List<NewsArticle>>(
             cacheCall = {
-                newsDao.getAllFlow()
+                newsDao.getAllArticlesFlow()
             },
             apiCall = {
                 apiLayer.getBusinessNews(topHeadlinesRequest)
@@ -64,13 +63,7 @@ class NewsRepositoryImpl @Inject constructor(
                     }
                 }
 
-        }.get(requestData.shouldCache).map {
-            if (it.isNullOrEmpty()) {
-                Resource.loading()
-            } else {
-                Resource.success(it)
-            }
-        }.flowOn(appDispatchers.ioDispatcher)
+        }.get(requestData.shouldCache).flowOn(appDispatchers.ioDispatcher)
     }
 
 }

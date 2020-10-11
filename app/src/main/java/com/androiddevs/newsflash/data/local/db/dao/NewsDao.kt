@@ -4,8 +4,10 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import com.androiddevs.newsflash.data.network.apiwrapper.Resource
 import com.androiddevs.newsflash.data.repository.models.NewsArticle
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 @Dao
 interface NewsDao {
@@ -16,6 +18,11 @@ interface NewsDao {
 
     @Query("Select * FROM news_details")
     fun getAllFlow(): Flow<List<NewsArticle>>
+
+    fun getAllArticlesFlow() =
+        getAllFlow().map {
+            Resource.success(it)
+        }
 
     suspend fun getAllArticles(): List<NewsArticle> {
         val allRecords = getAll()
