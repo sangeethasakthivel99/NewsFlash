@@ -2,7 +2,10 @@ package com.androiddevs.newsflash.data.network
 
 import com.androiddevs.newsflash.data.network.apiwrapper.Resource
 import com.androiddevs.newsflash.data.network.apiwrapper.Status
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 
 abstract class NetworkBoundResource<ApiType, ReturnType>(
     private val cacheCall: (suspend () -> Flow<Resource<ReturnType>>),
@@ -10,13 +13,23 @@ abstract class NetworkBoundResource<ApiType, ReturnType>(
 ) {
 
     suspend fun get(shouldCache: Boolean): Flow<Resource<ReturnType>> {
-        return if (shouldCache) {
-            flowOf(
-                makeApiCall(shouldCache),
-                cacheCall()
-            ).flatMapMerge { it }
-        } else {
-            makeApiCall(shouldCache)
+        return flow {
+            if (shouldCache) { //1st page data/ 2nd page/
+                combine(cacheCall(), makeApiCall(shouldCache)) { cacheResource, apiResource ->
+                    cacheResource.data?.let {
+                            emitAll(cacheCall())
+                    } ?: kotlin.run { emit(apiResource) }
+                }
+                //cache call returns null/empty
+                //return from api
+                //return error
+
+                //cache has data, api failed, return that data
+
+                // cache has data, api has data, now insert and get the latest data, room will provide
+            } else {
+                emitAll(makeApiCall(shouldCache))
+            }
         }
     }
 

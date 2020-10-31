@@ -19,10 +19,11 @@ interface NewsDao {
     @Query("Select * FROM news_details")
     fun getAllFlow(): Flow<List<NewsArticle>>
 
-    fun getAllArticlesFlow() =
-        getAllFlow().map {
+    fun getAllArticlesFlow(): Flow<Resource<List<NewsArticle>>> {
+      return  getAllFlow().map {
             Resource.success(it)
         }
+    }
 
     suspend fun getAllArticles(): List<NewsArticle> {
         val allRecords = getAll()
